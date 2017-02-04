@@ -28,6 +28,7 @@ classdef estm
 		function obj = estm(Val, varargin)
 			p = inputParser;
 			addRequired(p, 'Val', @isnumeric);
+			addOptional(p, 'SEOpt', [], @isnumeric);
 			addParameter(p, 'SE', [], @(x) isnumeric(x) && numel(x) == 1);
 			addParameter(p, 'SD', [], @(x) isnumeric(x) && numel(x) == 1);
 			addParameter(p, 'Size', [], @(x) ~mod(x, 1) && x > 0);
@@ -39,28 +40,35 @@ classdef estm
 				obj.Data = [];
 				obj.Value = p.Results.Val;
 				results = struct2cell(p.Results);
-				switch num2str(find(cellfun(@isempty, results(1:3)')))
-					case '1' % If no SD
-						obj.StandardError = p.Results.SE;
+				emptyIdx = num2str(find(cellfun(@isempty, results(1:4)')));
+				switch emptyIdx
+					case {'1  2', '1  3'} % If no SD
+						SEBuffer = [p.Results.SEOpt, p.Results.SE];
+						obj.StandardError = SEBuffer(~isempty(SEBuffer));
 						obj.Size = p.Results.Size;
 						obj.StandardDeviation = obj.StandardError / sqrt(obj.Size);
-					case '2' % If no SE
+					case '2  3' % If no SE
 						obj.Size = p.Results.Size;
 						obj.StandardDeviation = p.Results.SD;
-						obj.StandardError = obj.StandardDeviation / sqrt(obj.Size);
-					case '1  3' % If SE only
-						obj.StandardError = p.Results.SE;
-					case '2  3' % If SD only
+						SEBuffer = [p.Results.SEOpt, p.Results.SE];
+						obj.StandardError = SEBuffer(~isempty(SEBuffer));
+					case {'1  2  4', '1  3  4'} % If SE only
+						SEBuffer = [p.Results.SEOpt, p.Results.SE];
+						obj.StandardError = SEBuffer(~isempty(SEBuffer));
+					case '2  3  4' % If SD only
 						obj.StandardDeviation = p.Results.SD;
-					case '1  2  3' % None
+					case '1  2  3  4' % None
 						obj.StandardDeviation = 0;
 						obj.StandardError = 0;
-					case '3' % No Size
+					case {'2  4', '3  4'} % No Size
 						obj.StandardDeviation = p.Results.SD;
-						obj.StandardError = p.Results.SE;
+						SEBuffer = [p.Results.SEOpt, p.Results.SE];
+						obj.StandardError = SEBuffer(~isempty(SEBuffer));
 					case '' % All three
-						if p.Results.SE / p.Results.SD == sqrt(p.Results.Size)
-							obj.StandardError = p.Results.SE;
+						SEBuffer = [p.Results.SEOpt, p.Results.SE];
+						SE = SEBuffer(~isempty(SEBuffer));
+						if SE / p.Results.SD == sqrt(p.Results.Size)
+							obj.StandardError = SE;
 							obj.Size = p.Results.Size;
 							obj.StandardDeviation = p.Results.SD;
 						else

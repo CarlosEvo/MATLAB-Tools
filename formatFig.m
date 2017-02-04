@@ -73,7 +73,7 @@ end
 % Axis Labels
 if ~useDefault('YLabelLeft', p) || ~useDefault('YLabelRight', p)
 	cellfun(@(ax) setLnRYLabels(ax, YLabelLeft, YLabelRight), ax)
-elseif ~useDefault('YLabel', p);
+elseif ~useDefault('YLabel', p)
 	cellfun(@(ax) set(ax.YLabel,'String', YLabel), ax);
 end
 cellfun(@(ax) set(ax.XLabel,'String', XLabel), ax);
@@ -83,7 +83,7 @@ switch axisScale
 	case 'semilogx'
 		xScale = 'log';
 		yScale = 'linear';
-		xTick = cellfun(@(Lx) logspace(Lx(1), Lx(2), tickNum),...
+		xTick = cellfun(@(Lx) logspace(log10(Lx(1)), log10(Lx(2)), tickNum),...
     		Lx, 'UniformOutput', false);
 		yTick = cellfun(@(Ly) linspace(Ly(1), Ly(2), tickNum),...
 		    Ly, 'UniformOutput', false);
@@ -92,14 +92,14 @@ switch axisScale
 		yScale = 'log';
 		xTick = cellfun(@(Lx) linspace(Lx(1), Lx(2), tickNum),...
     		Lx, 'UniformOutput', false);
-		yTick = cellfun(@(Ly) logspace(Ly(1), Ly(2), tickNum),...
+		yTick = cellfun(@(Ly) logspace(log10(Ly(1)), log10(Ly(2)), tickNum),...
 		    Ly, 'UniformOutput', false);
 	case 'loglog'
 		xScale = 'log';
 		yScale = 'log';
-		xTick = cellfun(@(Lx) logspace(Lx(1), Lx(2), tickNum),...
+		xTick = cellfun(@(Lx) logspace(log10(Lx(1)), log10(Lx(2)), tickNum),...
     		Lx, 'UniformOutput', false);
-		yTick = cellfun(@(Ly) logspace(Ly(1), Ly(2), tickNum),...
+		yTick = cellfun(@(Ly) logspace(log10(Ly(1)), log10(Ly(2)), tickNum),...
 		    Ly, 'UniformOutput', false);
 	case 'linear'
 		xScale = 'linear';
