@@ -53,7 +53,7 @@ axisNum = numel(ax);
 if ~isa(ax, 'cell')
 	buffer = ax;
 	ax = cell(axisNum, 1);
-	ax = deal(buffer);
+	ax{:} = deal(buffer);
 end
 axisProperties = {'axisLocation', 'XAxisLocation', 'YAxisLocation',...
 	'axisScale', 'XLabel', 'YLabel', 'YLabelLeft', 'YLabelRight'};

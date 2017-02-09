@@ -112,6 +112,15 @@ classdef estm
 		function output = sqrt(obj)
 			output = estComp(@(obj) sqrt(obj), obj);
 		end
+		function output = log(obj)
+			output = estComp(@(obj) log(obj), obj);
+		end
+		function output = log2(obj)
+			output = estComp(@(obj) log2(obj), obj);
+		end
+		function output = log10(obj)
+			output = estComp(@(obj) log10(obj), obj);
+		end
 		function output = uplus(obj)
 			output = obj;
 		end
