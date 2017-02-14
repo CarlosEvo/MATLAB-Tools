@@ -3,7 +3,7 @@ function [] = formatFig( fig, ax, fileName, varargin )
 %		function [] = formatFig( fig, {ax}, fileName, varargin )
 %   Format figure according to scientific paper's standard. Output
 %		fileName.pdf to the current directory.
-%   axOptLs = {'axisLocation', 'axisScale',...
+%   axOptLs = {'axisLocation', 'axisScale', 'aLignYAxis',...
 %              'XLabel', 'YLabel',...
 %              'YLabelLeft', 'YLabelRight', 'FontSize'};
 %   figOptLs = {'size'};
@@ -29,7 +29,7 @@ addParameter(p, 'YLabel', '', @(x) isOrContain(x, 'char'));
 addParameter(p, 'YLabelLeft', '', @(x) isOrContain(x, 'char'));
 addParameter(p, 'YLabelRight', '', @(x) isOrContain(x, 'char'));
 addParameter(p, 'tickNum', 6, @isinteger);
-addParameter(p, 'fontSize', 20, @isfloat);
+addParameter(p, 'fontSize', 22, @isfloat);
 
 % Parse input
 parse(p, fig, ax, fileName, varargin{:});
@@ -61,11 +61,11 @@ for itemIdx = 1:numel(axisProperties)
 	item = axisProperties{itemIdx};
 	itemValue = eval(item);
 	if ~isa(itemValue, 'cell') % Single element
-		eval(['clear(''' item ''')']);
-		eval([item '(1 :axisNum) = {''' itemValue '''}']);
+		evalc(['clear(''' item ''')']);
+		evalc([item '(1 :axisNum) = {''' itemValue '''}']);
 	elseif isa(itemValue, 'cell') && numel(itemValue) == 1 % A cell containing only one element
-		eval(['clear(''' item ''')']);
-		eval([item '(1 :axisNum) = ' itemValue]);
+		evalc(['clear(''' item ''')']);
+		evalc([item '(1 :axisNum) = ' itemValue]);
 	elseif numel(itemValue) ~= axisNum
 		error('%s should have the same number as axes.', item);
 	end

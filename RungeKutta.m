@@ -1,5 +1,5 @@
 function [ y_out ] = RungeKutta( y_in, func, tRange, varargin )
-% RungeKutta: Runge Kutta MetstepSizeod
+% RungeKutta: Runge Kutta Method
 %
 % [ out ] = RungeKutta( y_n, func, tRange, Name, Value ): gives y_out based on input value of func(t, y), y_in, tRange and number of steps stepNo or step size stepSize
 
