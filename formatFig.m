@@ -86,7 +86,7 @@ if ~useDefault('XAxisLocation', p) || ~useDefault('YAxisLocation', p)
 		ax, XAxisLocation, YAxisLocation);
 elseif ~useDefault('AxisLocation', p)
 	cellfun(@(ax, axisLocation) set(ax, 'XAxisLocation', axisLocation,...
-		'YAxisLocation', axisLocation), ax, axisLocation, axisLocation);
+		'YAxisLocation', axisLocation), ax, axisLocation);
 end
 
 % Axis Labels
