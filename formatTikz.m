@@ -1,12 +1,11 @@
 function [] = formatFig( fig, ax, fileName, varargin )
-%FORMATFIG Format Figure and Save as PDF
+%FORMATFIG Format Figure and Save as tikz
 %		function [] = formatFig( fig, {ax}, fileName, varargin )
 %   Format figure according to scientific paper's standard. Output
 %		fileName.pdf to the current directory.
 %   axOptLs = {'axisLocation', 'axisScale', 'aLignYAxis',...
 %              'XLabel', 'YLabel',...
 %              'YLabelLeft', 'YLabelRight', 'FontSize'};
-%   figOptLs = {'size'};
 
 p = inputParser;
 % Required
@@ -14,8 +13,6 @@ addRequired(p, 'fig', @(x) isa(x, 'matlab.ui.Figure'));
 addRequired(p, 'ax', @(x) isOrContain(x, 'matlab.graphics.axis.Axes'));
 addRequired(p, 'fileName', @ischar);
 % Parameters
-addParameter(p, 'size', 'Landscape', @(x)...
-	~isempty(regexpi(x, {'Landscape', 'Portrait', 'Image'})));
 addParameter(p, 'axisLocation', 'default',...
 	@(x) memberOrContain(x, {'default', 'origin'}));
 addParameter(p, 'XAxisLocation', 'bottom',...
@@ -29,7 +26,7 @@ addParameter(p, 'YLabel', '', @(x) isOrContain(x, 'char'));
 addParameter(p, 'YLabelLeft', '', @(x) isOrContain(x, 'char'));
 addParameter(p, 'YLabelRight', '', @(x) isOrContain(x, 'char'));
 addParameter(p, 'tickNum', 6, @isinteger);
-addParameter(p, 'fontSize', 22, @isfloat);
+addParameter(p, 'fontSize', 12, @isfloat);
 addParameter(p, 'fontName', 'Times New Roman', @ischar);
 
 % Parse input
@@ -105,25 +102,15 @@ cellfun(@(ax, XLabel) set(ax.XLabel, 'String', XLabel), ax, XLabel);
 	cellfun(@(axisScale, Lx, Ly) genScaleTick (axisScale, Lx, Ly, tickNum),...
 	axisScale, Lx, Ly, 'UniformOutput', 0);
 
-% Paper Size
-switch size
-	case 'image'
-		set(fig, 'Units', 'Inches');
-		pos = get(fig, 'Position');
-		set(fig, 'PaperUnits', 'Inches',...
-			'PaperSize', [pos(3), pos(4)])
-	case {'Landscape', 'Portrait'}
-		set(fig, 'PaperOrientation', size);
-end
-
 % Set ticks & font size
 cellfun(@(ax, xTick, yTick, xScale, yScale) set(ax,...
     'XTick', xTick, 'YTick', yTick,...
     'XScale', xScale, 'YScale', yScale,...
     'FontSize', fontSize, 'FontName', fontName),...
-    ax, xTick, yTick, xScale, yScale)
+    ax, xTick, yTick, xScale, yScale);
 
-print(fig, fileName, '-dpdf', '-r0', '-fillpage');
+% Convert to tikz
+matlab2tikz(fileName, 'figureHandle', fig, 'width', '0.75\linewidth');
 
 end
 
