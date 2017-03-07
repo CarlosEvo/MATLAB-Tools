@@ -30,6 +30,7 @@ addParameter(p, 'YLabelLeft', '', @(x) isOrContain(x, 'char'));
 addParameter(p, 'YLabelRight', '', @(x) isOrContain(x, 'char'));
 addParameter(p, 'tickNum', 6, @isinteger);
 addParameter(p, 'fontSize', 22, @isfloat);
+addParameter(p, 'fontName', 'Times New Roman', @ischar);
 
 % Parse input
 parse(p, fig, ax, fileName, varargin{:});
@@ -47,6 +48,7 @@ YLabelLeft = p.Results.YLabelLeft;
 YLabelRight = p.Results.YLabelRight;
 tickNum = p.Results.tickNum;
 fontSize = p.Results.fontSize;
+fontName = p.Results.fontName;
 
 % Convert to cells
 axisNum = numel(ax);
@@ -118,7 +120,7 @@ end
 cellfun(@(ax, xTick, yTick, xScale, yScale) set(ax,...
     'XTick', xTick, 'YTick', yTick,...
     'XScale', xScale, 'YScale', yScale,...
-    'FontSize', fontSize),...
+    'FontSize', fontSize, 'FontName', fontName),...
     ax, xTick, yTick, xScale, yScale)
 
 print(fig, fileName, '-dpdf', '-r0', '-fillpage');

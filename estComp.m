@@ -64,7 +64,7 @@ function [output] = estComp(func, varargin)
 		if numel(func_mem) == limit
 			func_mem = {func_mem{2: end}, func_str};
 			funcSE_mem = {funcSE_mem{2: end}, funcSE_str};
-			funcSD_mem = {funcSE_mem{2: end}, funcSD_str};
+			funcSD_mem = {funcSD_mem{2: end}, funcSD_str};
 		else
 			emptyIdx = find(cellfun(@isempty, func_mem), 1);
 			func_mem{emptyIdx} = func_str;

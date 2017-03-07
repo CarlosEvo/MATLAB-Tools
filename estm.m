@@ -128,6 +128,24 @@ classdef estm
 			output = obj;
 			output.Val = -output.Val;
 		end
+		function output = sin(obj)
+			output = estComp(@(obj) sin(obj), obj);
+		end
+		function output = sind(obj)
+			output = estComp(@(obj) sin(obj), obj * pi / 180);
+		end
+		function output = cos(obj)
+			output = estComp(@(obj) cos(obj), obj);
+		end
+		function output = cosd(obj)
+			output = estComp(@(obj) cos(obj), obj * pi / 180);
+		end
+		function output = tan(obj)
+			output = estComp(@(obj) tan(obj), obj);
+		end
+		function output = tand(obj)
+			output = estComp(@(obj) tan(obj), obj * pi / 180);
+		end
 		function output = times(obj1, obj2)
 			if numel(obj1) == numel(obj2)...
 				&& ((iscolumn(obj1) && iscolumn(obj2))...
@@ -345,7 +363,7 @@ classdef estm
 				se_str = sprintf('%.3f', obj.StandardError * 10 ^ (-nod_val));
 				output = sprintf('$ (%s \\pm %s) \\times 10^{%d} $', val_str, se_str, nod_val);
 			elseif abs(obj.Value) < 1000
-				val_str = sprintf('%.4g', obj.Value);
+				val_str = sprintf('%#.4g', obj.Value);
 				val_se = sprintf('%#.4g', obj.StandardError);
 				val_se = val_se(1: 5);
 				output = sprintf('$ %s \\pm %s $', val_str, val_se);
