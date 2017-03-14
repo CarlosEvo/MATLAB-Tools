@@ -34,7 +34,6 @@ parse(p, fig, ax, fileName, varargin{:});
 fig = p.Results.fig;
 ax = p.Results.ax;
 fileName = p.Results.fileName;
-size = p.Results.size;
 axisLocation = p.Results.axisLocation;
 XAxisLocation = p.Results.XAxisLocation;
 YAxisLocation = p.Results.YAxisLocation;
@@ -110,6 +109,9 @@ cellfun(@(ax, xTick, yTick, xScale, yScale) set(ax,...
     ax, xTick, yTick, xScale, yScale);
 
 % Convert to tikz
+if ~any(regexp(fileName, '\\.tex$'))
+	fileName = [fileName, '.tex'];
+end
 matlab2tikz(fileName, 'figureHandle', fig, 'width', '0.75\linewidth');
 
 end
