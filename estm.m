@@ -361,12 +361,12 @@ classdef estm
 			if abs(obj.Value) < 0.1 || abs(obj.Value) >= 1000 % If < 0.1
 				val_str = sprintf('%.3f', obj.Value * 10 ^ (-nod_val));
 				se_str = sprintf('%.3f', obj.StandardError * 10 ^ (-nod_val));
-				output = sprintf('$ (%s \\pm %s) \\times 10^{%d} $', val_str, se_str, nod_val);
+				output = sprintf('\( (%s \\pm %s) \\times 10^{%d} \)', val_str, se_str, nod_val);
 			elseif abs(obj.Value) < 1000
 				val_str = sprintf('%#.4g', obj.Value);
 				val_se = sprintf('%#.4g', obj.StandardError);
 				val_se = val_se(1: 5);
-				output = sprintf('$ %s \\pm %s $', val_str, val_se);
+				output = sprintf('\( %s \\pm %s \)', val_str, val_se);
 			end
 		end
 	end
