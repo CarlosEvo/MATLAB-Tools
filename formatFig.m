@@ -22,8 +22,8 @@ addParameter(p, 'XAxisLocation', 'bottom',...
 	@(x) memberOrContain(x, {'bottom', 'origin', 'top'}));
 addParameter(p, 'YAxisLocation', 'left',...
 	@(x) memberOrContain(x, {'left', 'origin', 'right'}));
-addParameter(p, 'axisScale', 'linear',...
-	@(x) memberOrContain(x, {'linear', 'semilogx', 'semilogy', 'loglog'}));
+addParameter(p, 'axisScale', 'default',...
+	@(x) memberOrContain(x, {'linear', 'semilogx', 'semilogy', 'loglog', 'default'}));
 addParameter(p, 'XLabel', '', @(x) isOrContain(x, 'char'));
 addParameter(p, 'YLabel', '', @(x) isOrContain(x, 'char'));
 addParameter(p, 'YLabelLeft', '', @(x) isOrContain(x, 'char'));
@@ -101,9 +101,20 @@ end
 cellfun(@(ax, XLabel) set(ax.XLabel, 'String', XLabel), ax, XLabel);
 
 % Axis Scale
-[xScale, yScale, xTick, yTick] =...
-	cellfun(@(axisScale, Lx, Ly) genScaleTick (axisScale, Lx, Ly, tickNum),...
-	axisScale, Lx, Ly, 'UniformOutput', 0);
+if ~strcmp(axisScale, 'default')
+	[xScale, yScale, xTick, yTick] =...
+		cellfun(@(axisScale, Lx, Ly) genScaleTick (axisScale, Lx, Ly, tickNum),...
+		axisScale, Lx, Ly, 'UniformOutput', 0);
+
+	% Set ticks & font size
+	cellfun(@(ax, xTick, yTick, xScale, yScale) set(ax,...
+		'XTick', xTick, 'YTick', yTick,...
+		'XScale', xScale, 'YScale', yScale),...
+		ax, xTick, yTick, xScale, yScale);
+end
+
+% Font type and size
+cellfun(@(ax) set(ax, 'FontSize', fontSize, 'FontName', fontName), ax);
 
 % Paper Size
 switch size
@@ -116,14 +127,8 @@ switch size
 		set(fig, 'PaperOrientation', size);
 end
 
-% Set ticks & font size
-cellfun(@(ax, xTick, yTick, xScale, yScale) set(ax,...
-    'XTick', xTick, 'YTick', yTick,...
-    'XScale', xScale, 'YScale', yScale,...
-    'FontSize', fontSize, 'FontName', fontName),...
-    ax, xTick, yTick, xScale, yScale)
-
 print(fig, fileName, '-dpdf', '-r0', '-fillpage');
+
 
 end
 
