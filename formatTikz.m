@@ -3,9 +3,13 @@ function [] = formatTikz( fig, ax, fileName, varargin )
 %		function [] = formatFig( fig, {ax}, fileName, varargin )
 %   Format figure according to scientific paper's standard. Output
 %		fileName.pdf to the current directory.
-%   axOptLs = {'axisLocation', 'axisScale', 'AlignYAxis',...
+%   axOpts = {'axisLocation', 'axisScale',...
 %              'XLabel', 'YLabel',...
-%              'YLabelLeft', 'YLabelRight', 'FontSize'};
+% 			   'XLim', 'YLim',...
+%              'YLabelLeft', 'YLabelRight',...
+%              'FontSize'...
+%	};
+% 	figOpts = {'width'}
 
 p = inputParser;
 % Required
@@ -13,6 +17,7 @@ addRequired(p, 'fig', @(x) isa(x, 'matlab.ui.Figure'));
 addRequired(p, 'ax', @(x) isOrContain(x, 'matlab.graphics.axis.Axes'));
 addRequired(p, 'fileName', @ischar);
 % Parameters
+addParameter(p, 'width', 0.75, @(x) isa(x, 'double') && x > 0 && x <= 1);
 addParameter(p, 'axisLocation', 'default',...
 	@(x) memberOrContain(x, {'default', 'origin'}));
 addParameter(p, 'XAxisLocation', 'bottom',...
@@ -23,6 +28,8 @@ addParameter(p, 'axisScale', 'default',...
 	@(x) memberOrContain(x, {'linear', 'semilogx', 'semilogy', 'loglog', 'default'}));
 addParameter(p, 'XLabel', '', @(x) isOrContain(x, 'char'));
 addParameter(p, 'YLabel', '', @(x) isOrContain(x, 'char'));
+addParameter(p, 'XLim', [],	@(x) isOrContain(x, 'double'));
+addParameter(p, 'YLim', [], @(x) isOrContain(x, 'double'));
 addParameter(p, 'YLabelLeft', '', @(x) isOrContain(x, 'char'));
 addParameter(p, 'YLabelRight', '', @(x) isOrContain(x, 'char'));
 addParameter(p, 'tickNum', 6, @isinteger);
@@ -34,12 +41,15 @@ parse(p, fig, ax, fileName, varargin{:});
 fig = p.Results.fig;
 ax = p.Results.ax;
 fileName = p.Results.fileName;
+width = p.Results.width;
 axisLocation = p.Results.axisLocation;
 XAxisLocation = p.Results.XAxisLocation;
 YAxisLocation = p.Results.YAxisLocation;
 axisScale = p.Results.axisScale;
 XLabel = p.Results.XLabel;
 YLabel = p.Results.YLabel;
+XLim = p.Results.XLim;
+YLim = p.Results.YLim;
 YLabelLeft = p.Results.YLabelLeft;
 YLabelRight = p.Results.YLabelRight;
 tickNum = p.Results.tickNum;
@@ -53,20 +63,46 @@ if ~isa(ax, 'cell')
 	ax = cell(axisNum, 1);
 	ax{:} = deal(buffer);
 end
-axisProperties = {'axisLocation', 'XAxisLocation', 'YAxisLocation',...
-	'axisScale', 'XLabel', 'YLabel', 'YLabelLeft', 'YLabelRight'};
+axisProperties = {...
+	'axisLocation', 'XAxisLocation', 'YAxisLocation',...
+	'axisScale',...
+	'XLabel', 'YLabel',...
+	'YLabelLeft', 'YLabelRight'...
+};
 for itemIdx = 1:numel(axisProperties)
 	item = axisProperties{itemIdx};
 	itemValue = eval(item);
 	if ~isa(itemValue, 'cell') % Single element
 		evalc(['clear(''' item ''')']);
-		evalc([item '(1 :axisNum) = {''' itemValue '''}']);
+		evalc([item '(1: axisNum) = {''' itemValue '''}']);
 	elseif isa(itemValue, 'cell') && numel(itemValue) == 1 % A cell containing only one element
 		evalc(['clear(''' item ''')']);
-		evalc([item '(1 :axisNum) = ' itemValue]);
+		evalc([item '(1: axisNum) = ' itemValue]);
 	elseif numel(itemValue) ~= axisNum
 		error('%s should have the same number as axes.', item);
 	end
+end
+
+% For XLim and YLim
+XLim_tmp = XLim;
+if ~isa(XLim, 'cell')
+	clear('XLim');
+	XLim(1: axisNum) = {XLim_tmp};
+elseif isa(XLim, 'cell') && numel(XLim) == 1
+	clear('XLim');
+	XLim(1: axisNum) = XLim_tmp;
+elseif numel(XLim) ~= axisNum
+	error('XLim should have the same number as axes.');
+end
+YLim_tmp = YLim;
+if ~isa(YLim, 'cell')
+	clear('YLim');
+	YLim(1: axisNum) = {YLim_tmp};
+elseif isa(YLim, 'cell') && numel(YLim) == 1
+	clear('YLim');
+	YLim(1: axisNum) = YLim_tmp;
+elseif numel(YLim) ~= axisNum
+	error('YLim should have the same number as axes.');
 end
 
 % Prepare
@@ -96,8 +132,24 @@ elseif ~useDefault('YLabel', p)
 end
 cellfun(@(ax, XLabel) set(ax.XLabel, 'String', XLabel), ax, XLabel);
 
+% Axis Limits
+if ~useDefault('XLim', p)
+	cellfun(@(ax, XLim) set(ax, 'XLim', XLim), ax, XLim);
+	Lx = XLim;
+else
+	Lx = cellfun(@(ax) get(ax, 'XLim'), ax,...
+		'UniformOutput', 0);
+end
+if ~useDefault('YLim', p)
+	cellfun(@(ax, YLim) set(ax, 'YLim', YLim), ax, YLim);
+	Ly = YLim;
+else
+	Ly = cellfun(@(ax) get(ax, 'YLim'), ax,...
+		'UniformOutput', 0);
+end
+
 % Axis Scale
-if ~strcmp(axisScale, 'default')
+if ~useDefault('axisScale', p)
 	[xScale, yScale, xTick, yTick] =...
 		cellfun(@(axisScale, Lx, Ly) genScaleTick (axisScale, Lx, Ly, tickNum),...
 		axisScale, Lx, Ly, 'UniformOutput', 0);
@@ -116,7 +168,13 @@ cellfun(@(ax) set(ax, 'FontSize', fontSize, 'FontName', fontName), ax);
 if ~any(regexp(fileName, '\\.tex$'))
 	fileName = [fileName, '.tex'];
 end
-matlab2tikz(fileName, 'figureHandle', fig, 'width', '0.75\linewidth');
+cleanfigure('handle', fig);
+matlab2tikz(...
+	fileName, 'figureHandle', fig,...
+	'width', [num2str(width), '\linewidth'],...
+	'floatFormat', '%.4f',...
+	'showInfo', false...
+);
 
 end
 
@@ -160,22 +218,37 @@ function [xScale, yScale, xTick, yTick] = genScaleTick (axisScale, Lx, Ly, tickN
 		case 'semilogx'
 			xScale = 'log';
 			yScale = 'linear';
-			xTick = logspace(log10(Lx(1)), log10(Lx(2)), tickNum);
+			xTick = logspace(floor(log10(Lx(1))), ceil(log10(Lx(2))), getLogNum(Lx, tickNum));
 			yTick = linspace(Ly(1), Ly(2), tickNum);
 		case 'semilogy'
 			xScale = 'linear';
 			yScale = 'log';
 			xTick = linspace(Lx(1), Lx(2), tickNum);
-			yTick = logspace(log10(Ly(1)), log10(Ly(2)), tickNum);
+			yTick = logspace(floor(log10(Ly(1))), ceil(log10(Ly(2))), getLogNum(Ly, tickNum));
 		case 'loglog'
 			xScale = 'log';
 			yScale = 'log';
-			xTick = logspace(log10(Lx(1)), log10(Lx(2)), tickNum);
-			yTick = logspace(log10(Ly(1)), log10(Ly(2)), tickNum);
+			xTick = logspace(floor(log10(Lx(1))), ceil(log10(Lx(2))), getLogNum(Lx, tickNum));
+			yTick = logspace(floor(log10(Ly(1))), ceil(log10(Ly(2))), getLogNum(Ly, tickNum));
 		case 'linear'
 			xScale = 'linear';
 			yScale = 'linear';
 			xTick = linspace(Lx(1), Lx(2), tickNum);
 			yTick = linspace(Ly(1), Ly(2), tickNum);
 	end
+end
+
+function [logNum] = getLogNum(axLim, tickNum)
+
+	axLog = [floor(log10(axLim(1))), ceil(log10(axLim(2)))];
+
+	if range(axLog) + 1 == tickNum
+		logNum = tickNum;
+	elseif range(axLog) + 1 < tickNum
+		logNum = range(axLog) + 1;
+	else
+		div = 1: tickNum - 1;
+		logNum = max(div(~rem(axLog, div))) + 1;
+	end
+
 end
