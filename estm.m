@@ -146,7 +146,7 @@ classdef estm
 		function output = tand(obj)
 			output = estComp(@(obj) tan(obj), obj * pi / 180);
 		end
-		function output = times(obj1, obj2)
+		function [varagout] = times(obj1, obj2)
 			if numel(obj1) == numel(obj2)...
 				&& ((iscolumn(obj1) && iscolumn(obj2))...
 				|| (isrow(obj1) && isrow(obj2)))
@@ -169,8 +169,15 @@ classdef estm
 			else
 				error('Matrix indices must match.');
 			end
+            if numel(output) == 1
+                varagout = output{:};
+            else
+                varagout{1} = cellfun(@(x) x.Value, output);
+                varagout{2} = cellfun(@(x) x.StandardError, output);
+            end
+
 		end
-		function output = rdivide(obj1, obj2)
+		function [varagout] = rdivide(obj1, obj2)
 			if numel(obj1) == numel(obj2)...
 				&& ((iscolumn(obj1) && iscolumn(obj2))...
 				|| (isrow(obj1) && isrow(obj2)))
@@ -193,8 +200,14 @@ classdef estm
 			else
 				error('Matrix indices must match.');
 			end
+            if numel(output) == 1
+                varagout = output{:};
+            else
+                varagout{1} = cellfun(@(x) x.Value, output);
+                varagout{2} = cellfun(@(x) x.StandardError, output);
+            end
 		end
-		function output = ldivide(obj1, obj2)
+		function [varagout] = ldivide(obj1, obj2)
 			if numel(obj1) == numel(obj2)...
 				&& ((iscolumn(obj1) && iscolumn(obj2))...
 				|| (isrow(obj1) && isrow(obj2)))
@@ -217,8 +230,14 @@ classdef estm
 			else
 				error('Matrix indices must match.');
 			end
+            if numel(output) == 1
+                varagout = output{:};
+            else
+                varagout{1} = cellfun(@(x) x.Value, output);
+                varagout{2} = cellfun(@(x) x.StandardError, output);
+            end
 		end
-		function output = power(obj1, obj2)
+		function [varagout] = power(obj1, obj2)
 			if numel(obj1) == numel(obj2)...
 				&& ((iscolumn(obj1) && iscolumn(obj2))...
 				|| (isrow(obj1) && isrow(obj2)))
@@ -237,10 +256,17 @@ classdef estm
 										'UniformOutput', 0),...
 									obj2,...
 								'UniformOutput', 0),...
-							obj1);
+							obj1...
+						);
 			else
 				error('Matrix indices must match.');
 			end
+            if numel(output) == 1
+                varagout = output{:};
+            else
+                varagout{1} = cellfun(@(x) x.Value, output);
+                varagout{2} = cellfun(@(x) x.StandardError, output);
+            end
 		end
 		function output = eq(obj1, obj2)
 			% When only one of them is estm class
