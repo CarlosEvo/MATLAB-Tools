@@ -32,8 +32,8 @@ addParameter(p, 'XLim', [],	@(x) isOrContain(x, 'double'));
 addParameter(p, 'YLim', [], @(x) isOrContain(x, 'double'));
 addParameter(p, 'YLabelLeft', '', @(x) isOrContain(x, 'char'));
 addParameter(p, 'YLabelRight', '', @(x) isOrContain(x, 'char'));
-addParameter(p, 'tickNum', 6, @isinteger);
-addParameter(p, 'fontSize', 12, @isfloat);
+addParameter(p, 'tickNum', 5, @isinteger);
+addParameter(p, 'fontSize', 9, @isfloat);
 addParameter(p, 'fontName', 'Times New Roman', @ischar);
 
 % Parse input
@@ -163,6 +163,7 @@ end
 
 % Font type and size
 cellfun(@(ax) set(ax, 'FontSize', fontSize, 'FontName', fontName), ax);
+set(findall(fig, 'type', 'text'), 'FontSize', fontSize);
 
 % Convert to tikz
 if ~any(regexp(fileName, '\\.tex$'))
@@ -172,8 +173,9 @@ cleanfigure('handle', fig);
 matlab2tikz(...
 	fileName, 'figureHandle', fig,...
 	'width', [num2str(width), '\linewidth'],...
-	'floatFormat', '%.3f',...
-	'showInfo', false...
+	'floatFormat', '%.5f',...
+	'showInfo', false,...
+    'strictFontSize', true...
 );
 
 end

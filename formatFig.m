@@ -17,7 +17,7 @@ addRequired(p, 'fig', @(x) isa(x, 'matlab.ui.Figure'));
 addRequired(p, 'ax', @(x) isOrContain(x, 'matlab.graphics.axis.Axes'));
 addRequired(p, 'fileName', @ischar);
 % Parameters
-addParameter(p, 'size', 'Landscape', @(x)...
+addParameter(p, 'size', 'image', @(x)...
 	~isempty(regexpi(x, {'Landscape', 'Portrait', 'Image'})));
 addParameter(p, 'axisLocation', 'default',...
 	@(x) memberOrContain(x, {'default', 'origin'}));
@@ -33,8 +33,8 @@ addParameter(p, 'XLim', [],	@(x) isOrContain(x, 'double'));
 addParameter(p, 'YLim', [], @(x) isOrContain(x, 'double'));
 addParameter(p, 'YLabelLeft', '', @(x) isOrContain(x, 'char'));
 addParameter(p, 'YLabelRight', '', @(x) isOrContain(x, 'char'));
-addParameter(p, 'tickNum', 6, @isinteger);
-addParameter(p, 'fontSize', 22, @isfloat);
+addParameter(p, 'tickNum', 5, @isinteger);
+addParameter(p, 'fontSize', 18, @isfloat);
 addParameter(p, 'fontName', 'Times New Roman', @ischar);
 
 % Parse input
@@ -165,15 +165,13 @@ cellfun(@(ax) set(ax, 'FontSize', fontSize, 'FontName', fontName), ax);
 % Paper Size
 switch size
 	case 'image'
-		set(fig, 'Units', 'Inches');
-		pos = get(fig, 'Position');
 		set(fig, 'PaperUnits', 'Inches',...
-			'PaperSize', [pos(3), pos(4)])
+			'PaperSize', [3, 2])
 	case {'Landscape', 'Portrait'}
 		set(fig, 'PaperOrientation', size);
 end
 
-print(fig, fileName, '-dpdf', '-r0', '-fillpage');
+print(fig, fileName, '-depsc');
 
 
 end
