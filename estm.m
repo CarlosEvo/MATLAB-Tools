@@ -92,34 +92,160 @@ classdef estm
 
         % Overloading Functions
         function output = plus(obj1, obj2)
-            output = estComp(@(obj1, obj2) obj1 + obj2, obj1, obj2);
+            if numel(obj2) == 1
+                output = arrayfun(...
+                    @(obj1) estComp(@(obj1, obj2) obj1 + obj2, obj1, obj2),...
+                    obj1...
+                );
+            elseif numel(obj1) == 1
+                output = arrayfun(...
+                    @(obj2) estComp(@(obj1, obj2) obj1 + obj2, obj1, obj2),...
+                    obj2...
+                );
+            elseif all(size(obj1) == size(obj2))
+                output = arrayfun(...
+                    @(obj1, obj2)...
+                    estComp(@(obj1, obj2) obj1 + obj2, obj1, obj2),...
+                    obj1, obj2...
+                );
+            elseif isvector(obj2) && any(length(obj2) == size(obj1))
+                match_dim = find(length(obj2) == size(obj1));
+                output_sz = size(obj1);
+                repmat_sz = output_sz;
+                repmat_sz(match_dim) = repmat_sz(match_dim) ./ length(obj2);
+                obj2 = repmat(obj2, repmat_sz);
+                output = arrayfun(...
+                    @(obj1, obj2)...
+                    estComp(@(obj1, obj2) obj1 + obj2, obj1, obj2),...
+                    obj1, obj2...
+                );
+            elseif isvector(obj1) && any(length(obj1) == size(obj2))
+                match_dim = find(length(obj1) == size(obj2));
+                output_sz = size(obj2);
+                repmat_sz = output_sz;
+                repmat_sz(match_dim) = repmat_sz(match_dim) ./ length(obj1);
+                obj1 = repmat(obj1, repmat_sz);
+                output = arrayfun(...
+                    estComp(@(obj1, obj2) obj1 + obj2, obj1, obj2),...
+                    obj2, obj1...
+                );
+            else
+                error('Matrix indices must agree.');
+            end
         end
         function output = minus(obj1, obj2)
-            output = estComp(@(obj1, obj2) obj1 - obj2, obj1, obj2);
+            if numel(obj2) == 1
+                output = arrayfun(...
+                    @(obj1) estComp(@(obj1, obj2) obj1 - obj2, obj1, obj2),...
+                    obj1...
+                );
+            elseif numel(obj1) == 1
+                output = arrayfun(...
+                    @(obj2) estComp(@(obj1, obj2) obj1 - obj2, obj1, obj2),...
+                    obj2...
+                );
+            elseif all(size(obj1) == size(obj2))
+                output = arrayfun(...
+                    @(obj1, obj2)...
+                    estComp(@(obj1, obj2) obj1 - obj2, obj1, obj2),...
+                    obj1, obj2...
+                );
+            elseif isvector(obj2) && any(length(obj2) == size(obj1))
+                match_dim = find(length(obj2) == size(obj1));
+                output_sz = size(obj1);
+                repmat_sz = output_sz;
+                repmat_sz(match_dim) = repmat_sz(match_dim) ./ length(obj2);
+                obj2 = repmat(obj2, repmat_sz);
+                output = arrayfun(...
+                    @(obj1, obj2)...
+                    estComp(@(obj1, obj2) obj1 - obj2, obj1, obj2),...
+                    obj1, obj2...
+                );
+            elseif isvector(obj1) && any(length(obj1) == size(obj2))
+                match_dim = find(length(obj1) == size(obj2));
+                output_sz = size(obj2);
+                repmat_sz = output_sz;
+                repmat_sz(match_dim) = repmat_sz(match_dim) ./ length(obj1);
+                obj1 = repmat(obj1, repmat_sz);
+                output = arrayfun(...
+                    estComp(@(obj1, obj2) obj1 - obj2, obj1, obj2),...
+                    obj2, obj1...
+                );
+            else
+                error('Matrix indices must agree.');
+            end
         end
         function output = mtimes(obj1, obj2)
-            output = estComp(@(obj1, obj2) obj1 * obj2, obj1, obj2);
+            if size(obj1, 2) == size(obj2, 1)
+                output = repmat(estm(0), [size(obj1, 1), size(obj2, 2)]);
+                for obj1_row = 1: size(obj1, 1)
+                    for obj2_col = 1: size(obj2, 2)
+                        output(obj1_row, obj2_col) = sum(...
+                            obj1(obj1_row, :)...
+                            .* obj2(:, obj2_col).'...
+                        );
+                    end
+                end
+            else
+                error('Matrix indices must agree.');
+            end
         end
         function output = mrdivide(obj1, obj2)
-            output = estComp(@(obj1, obj2) obj1 / obj2, obj1, obj2);
+            if size(obj1, 2) == size(obj2, 1)
+                output = repmat(estm(0), [size(obj1, 1), size(obj2, 2)]);
+                for obj1_row = 1: size(obj1, 1)
+                    for obj2_col = 1: size(obj2, 2)
+                        output(obj1_row, obj2_col) = sum(...
+                            obj1(obj1_row, :)...
+                            ./ obj2(:, obj2_col).'...
+                        );
+                    end
+                end
+            else
+                error('Matrix indices must agree.');
+            end
         end
         function output = mldivide(obj1, obj2)
-            output = estComp(@(obj1, obj2) obj1 \ obj2, obj1, obj2);
+            if size(obj1, 2) == size(obj2, 1)
+                output = repmat(estm(0), [size(obj1, 1), size(obj2, 2)]);
+                for obj1_row = 1: size(obj1, 1)
+                    for obj2_col = 1: size(obj2, 2)
+                        output(obj1_row, obj2_col) = sum(...
+                            obj1(obj1_row, :)...
+                            .\ obj2(:, obj2_col).'...
+                        );
+                    end
+                end
+            else
+                error('Matrix indices must agree.');
+            end
         end
         function output = mpower(obj1, obj2)
-            output = estComp(@(obj1, obj2) obj1 ^ obj2, obj1, obj2);
+            if size(obj1, 2) == size(obj2, 1)
+                output = repmat(estm(0), [size(obj1, 1), size(obj2, 2)]);
+                for obj1_row = 1: size(obj1, 1)
+                    for obj2_col = 1: size(obj2, 2)
+                        output(obj1_row, obj2_col) = sum(...
+                            obj1(obj1_row, :)...
+                            .^ obj2(:, obj2_col).'...
+                        );
+                    end
+                end
+            else
+                error('Matrix indices must agree.');
+            end
         end
         function output = sqrt(obj)
-            output = estComp(@(obj) sqrt(obj), obj);
+            output = arrayfun(@(obj) estComp(@(obj) sqrt(obj), obj), obj);
         end
         function output = log(obj)
-            output = estComp(@(obj) log(obj), obj);
+            output = arrayfun(@(obj) estComp(@(obj) log(obj), obj), obj);
         end
         function output = log2(obj)
-            output = estComp(@(obj) log2(obj), obj);
+            output = arrayfun(@(obj) estComp(@(obj) log2(obj), obj), obj);
         end
         function output = log10(obj)
-            output = estComp(@(obj) log10(obj), obj);
+            output = arrayfun(@(obj) estComp(@(obj) log10(obj), obj), obj);
         end
         function output = uplus(obj)
             output = obj;
@@ -129,143 +255,194 @@ classdef estm
             output.Value = -output.Value;
         end
         function output = sin(obj)
-            output = estComp(@(obj) sin(obj), obj);
+            output = arrayfun(@(obj) estComp(@(obj) sin(obj), obj), obj);
         end
         function output = sind(obj)
-            output = estComp(@(obj) sin(obj), obj * pi / 180);
+            output = arrayfun(@(obj) estComp(@(obj) sin(obj), obj), obj .* pi ./ 180);
         end
         function output = cos(obj)
-            output = estComp(@(obj) cos(obj), obj);
+            output = arrayfun(@(obj) estComp(@(obj) cos(obj), obj), obj);
         end
         function output = cosd(obj)
-            output = estComp(@(obj) cos(obj), obj * pi / 180);
+            output = arrayfun(@(obj) estComp(@(obj) cos(obj), obj), obj .* pi ./ 180);
         end
         function output = tan(obj)
-            output = estComp(@(obj) tan(obj), obj);
+            output = arrayfun(@(obj) estComp(@(obj) tan(obj), obj), obj);
         end
         function output = tand(obj)
-            output = estComp(@(obj) tan(obj), obj * pi / 180);
+            output = arrayfun(@(obj) estComp(@(obj) tan(obj), obj), obj .* pi ./ 180);
         end
-        function [varagout] = times(obj1, obj2)
-            if numel(obj1) == numel(obj2)...
-                && ((iscolumn(obj1) && iscolumn(obj2))...
-                || (isrow(obj1) && isrow(obj2)))
-                    output = arrayfun(@(x, y) estComp(@(x, y) x * y, x, y),...
-                        obj1, obj2, 'UniformOutput', 0);
-            elseif (iscolumn(obj1) && isrow(obj2))...
-                    || (isrow(obj1) && iscolumn(obj2))
-                output = arrayfun(@(x)...
-                            arrayfun(@(a, b)...
-                                estComp(@(a, b)...
-                                    a * b,...
-                                    a{:}, b),...
-                                    cellfun(@(v)...
-                                        x,...
-                                        cell(numel(obj2), 1),...
-                                        'UniformOutput', 0),...
-                                    obj2,...
-                                'UniformOutput', 0),...
-                            obj1);
-            else
-                error('Matrix indices must match.');
-            end
-            if numel(output) == 1
-                varagout = output{:};
-            else
-                varagout{1} = cellfun(@(x) x.Value, output);
-                varagout{2} = cellfun(@(x) x.StandardError, output);
-            end
-
+        function output = asin(obj)
+            output = arrayfun(@(obj) estComp(@(obj) asin(obj), obj), obj);
         end
-        function [varagout] = rdivide(obj1, obj2)
-            if numel(obj1) == numel(obj2)...
-                && ((iscolumn(obj1) && iscolumn(obj2))...
-                || (isrow(obj1) && isrow(obj2)))
-                    output = arrayfun(@(x, y) estComp(@(x, y) x / y, x, y),...
-                        obj1, obj2, 'UniformOutput', 0);
-            elseif (iscolumn(obj1) && isrow(obj2))...
-                    || (isrow(obj1) && iscolumn(obj2))
-                output = arrayfun(@(x)...
-                            arrayfun(@(a, b)...
-                                estComp(@(a, b)...
-                                    a / b,...
-                                    a{:}, b),...
-                                    cellfun(@(v)...
-                                        x,...
-                                        cell(numel(obj2), 1),...
-                                        'UniformOutput', 0),...
-                                    obj2,...
-                                'UniformOutput', 0),...
-                            obj1);
-            else
-                error('Matrix indices must match.');
-            end
-            if numel(output) == 1
-                varagout = output{:};
-            else
-                varagout{1} = cellfun(@(x) x.Value, output);
-                varagout{2} = cellfun(@(x) x.StandardError, output);
-            end
+        function output = asind(obj)
+            output = arrayfun(@(obj) estComp(@(obj) asin(obj) ./ pi .* 180, obj), obj);
         end
-        function [varagout] = ldivide(obj1, obj2)
-            if numel(obj1) == numel(obj2)...
-                && ((iscolumn(obj1) && iscolumn(obj2))...
-                || (isrow(obj1) && isrow(obj2)))
-                    output = arrayfun(@(x, y) estComp(@(x, y) x \ y, x, y),...
-                        obj1, obj2, 'UniformOutput', 0);
-            elseif (iscolumn(obj1) && isrow(obj2))...
-                    || (isrow(obj1) && iscolumn(obj2))
-                output = arrayfun(@(x)...
-                            arrayfun(@(a, b)...
-                                estComp(@(a, b)...
-                                    a \ b,...
-                                    a{:}, b),...
-                                    cellfun(@(v)...
-                                        x,...
-                                        cell(numel(obj2), 1),...
-                                        'UniformOutput', 0),...
-                                    obj2,...
-                                'UniformOutput', 0),...
-                            obj1);
-            else
-                error('Matrix indices must match.');
-            end
-            if numel(output) == 1
-                varagout = output{:};
-            else
-                varagout{1} = cellfun(@(x) x.Value, output);
-                varagout{2} = cellfun(@(x) x.StandardError, output);
-            end
+        function output = acos(obj)
+            output = arrayfun(@(obj) estComp(@(obj) acos(obj), obj), obj);
         end
-        function [varagout] = power(obj1, obj2)
-            if numel(obj1) == numel(obj2)...
-                && ((iscolumn(obj1) && iscolumn(obj2))...
-                || (isrow(obj1) && isrow(obj2)))
-                    output = arrayfun(@(x, y) estComp(@(x, y) x ^ y, x, y),...
-                        obj1, obj2, 'UniformOutput', 0);
-            elseif (iscolumn(obj1) && isrow(obj2))...
-                    || (isrow(obj1) && iscolumn(obj2))
-                output = arrayfun(@(x)...
-                            arrayfun(@(a, b)...
-                                estComp(@(a, b)...
-                                    a ^ b,...
-                                    a{:}, b),...
-                                    cellfun(@(v)...
-                                        x,...
-                                        cell(numel(obj2), 1),...
-                                        'UniformOutput', 0),...
-                                    obj2,...
-                                'UniformOutput', 0),...
-                            obj1...
+        function output = acosd(obj)
+            output = arrayfun(@(obj) estComp(@(obj) acos(obj), obj) ./ pi .* 180, obj);
+        end
+        function output = atan(obj)
+            output = arrayfun(@(obj) estComp(@(obj) atan(obj), obj), obj);
+        end
+        function output = atand(obj)
+            output = arrayfun(@(obj) estComp(@(obj) atan(obj), obj) ./ pi .* 180, obj);
+        end
+        function [output] = times(obj1, obj2)
+            if all(size(obj1) == size(obj2))
+                output = arrayfun(...
+                    @(x, y) estComp(@(x, y) x .* y, x, y),...
+                    obj1, obj2...
+                );
+            elseif iscolumn(obj1) && isrow(obj2)
+                row = size(obj1, 1);
+                col = size(obj2, 2);
+                output = repmat(estm(0, 0), row, col);
+                for row_idx = 1: row
+                    for col_idx = 1: col
+                        output(row_idx, col_idx) = estComp(...
+                            @(x, y) x .* y,...
+                            obj1(row_idx), obj2(col_idx)...
                         );
+                    end
+                end
+            elseif isrow(obj1) && iscolumn(obj2)
+                row = size(obj2, 1);
+                col = size(obj1, 2);
+                output = repmat(estm(0, 0), row, col);
+                for row_idx = 1: row
+                    for col_idx = 1: col
+                        output(row_idx, col_idx) = estComp(...
+                            @(x, y) x .* y,...
+                            obj1(col_idx), obj2(row_idx)...
+                        );
+                    end
+                end
             else
-                error('Matrix indices must match.');
+                error('Matrix indices must agree.');
             end
-            if numel(output) == 1
-                varagout = output{:};
+        end
+        function [output] = rdivide(obj1, obj2)
+            if all(size(obj1) == size(obj2))
+                output = arrayfun(...
+                    @(x, y) estComp(@(x, y) x ./ y, x, y),...
+                    obj1, obj2...
+                );
+            elseif iscolumn(obj1) && isrow(obj2)
+                row = size(obj1, 1);
+                col = size(obj2, 2);
+                output = repmat(estm(0, 0), row, col);
+                for row_idx = 1: row
+                    for col_idx = 1: col
+                        output(row_idx, col_idx) = estComp(...
+                            @(x, y) x ./ y,...
+                            obj1(row_idx), obj2(col_idx)...
+                        );
+                    end
+                end
+            elseif isrow(obj1) && iscolumn(obj2)
+                row = size(obj2, 1);
+                col = size(obj1, 2);
+                output = repmat(estm(0, 0), row, col);
+                for row_idx = 1: row
+                    for col_idx = 1: col
+                        output(row_idx, col_idx) = estComp(...
+                            @(x, y) x ./ y,...
+                            obj1(col_idx), obj2(row_idx)...
+                        );
+                    end
+                end
             else
-                varagout{1} = cellfun(@(x) x.Value, output);
-                varagout{2} = cellfun(@(x) x.StandardError, output);
+                error('Matrix indices must agree.');
+            end
+        end
+        function [output] = ldivide(obj1, obj2)
+            if all(size(obj1) == size(obj2))
+                output = arrayfun(...
+                    @(x, y) estComp(@(x, y) x .\ y, x, y),...
+                    obj1, obj2...
+                );
+            elseif iscolumn(obj1) && isrow(obj2)
+                row = size(obj1, 1);
+                col = size(obj2, 2);
+                output = repmat(estm(0, 0), row, col);
+                for row_idx = 1: row
+                    for col_idx = 1: col
+                        output(row_idx, col_idx) = estComp(...
+                            @(x, y) x .\ y,...
+                            obj1(row_idx), obj2(col_idx)...
+                        );
+                    end
+                end
+            elseif isrow(obj1) && iscolumn(obj2)
+                row = size(obj2, 1);
+                col = size(obj1, 2);
+                output = repmat(estm(0, 0), row, col);
+                for row_idx = 1: row
+                    for col_idx = 1: col
+                        output(row_idx, col_idx) = estComp(...
+                            @(x, y) x .\ y,...
+                            obj1(col_idx), obj2(row_idx)...
+                        );
+                    end
+                end
+            else
+                error('Matrix indices must agree.');
+            end
+        end
+        function [output] = power(obj1, obj2)
+            if all(size(obj1) == size(obj2))
+                output = arrayfun(...
+                    @(x, y) estComp(@(x, y) x .^ y, x, y),...
+                    obj1, obj2...
+                );
+            elseif iscolumn(obj1) && isrow(obj2)
+                row = size(obj1, 1);
+                col = size(obj2, 2);
+                output = repmat(estm(0, 0), row, col);
+                for row_idx = 1: row
+                    for col_idx = 1: col
+                        output(row_idx, col_idx) = estComp(...
+                            @(x, y) x .^ y,...
+                            obj1(row_idx), obj2(col_idx)...
+                        );
+                    end
+                end
+            elseif isrow(obj1) && iscolumn(obj2)
+                row = size(obj2, 1);
+                col = size(obj1, 2);
+                output = repmat(estm(0, 0), row, col);
+                for row_idx = 1: row
+                    for col_idx = 1: col
+                        output(row_idx, col_idx) = estComp(...
+                            @(x, y) x .^ y,...
+                            obj1(col_idx), obj2(row_idx)...
+                        );
+                    end
+                end
+            else
+                error('Matrix indices must agree.');
+            end
+        end
+        function output = sum(obj)
+            N = length(obj);
+            if N > 1
+                output = 0;
+                for idx = 1: N
+                    output = output + obj(idx);
+                end
+            else
+                output = obj;
+            end
+        end
+        function output = mean(obj)
+            N = length(obj);
+            if N > 1
+                output = sum(obj) / N;
+            else
+                output = obj;
             end
         end
         function output = eq(obj1, obj2)

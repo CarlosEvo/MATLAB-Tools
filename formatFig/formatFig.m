@@ -1,24 +1,47 @@
-function [] = formatFig( fig, ax, fileName, varargin )
+function [] = formatFig( fig, fileName, varargin )
 %FORMATFIG Format Figure and Save as PDF
-%		function [] = formatFig( fig, {ax}, fileName, varargin )
+%		function [] = formatFig( fig, fileName, varargin )
 %   Format figure according to scientific paper's standard. Output
-%		fileName.pdf to the current directory.
-%   axOpts = {'axisLocation', 'axisScale',...
-%              'XLabel', 'YLabel',...
-% 			   'XLim', 'YLim',...
-%              'YLabelLeft', 'YLabelRight',...
-%              'FontSize'...
-%	};
-%   figOpts = {'size'};
+%	fileName.eps to the current directory.
+%   fig: the figure handle
+%   fileName: fileName of the .eps file
+%   orientation: size/orientation of the output eps:
+%       'image' (default): 3" x 2" eps. use imageSize to specify sizes.
+%       'landscape': landscape letter size.
+%       'portrait': portrait letter size.
+%   imageSize: size of image/eps: 1 x 2 positive double array. (Default: [3, 2])
+%   axisLocation: location of x & y axes:
+%       'default' (default): default configuration.
+%       'origin': both axes passes through origin.
+%   XAxisLocation: location of x & y axes:
+%       'bottom' (default): default configuration.
+%       'origin': x axis passes through origin.
+%       'top': x axis at top of the figure.
+%   axisLocation: location of x & y axes:
+%       'left' (default): default configuration.
+%       'origin': y axis passes through origin.
+%       'right': y axis to the right of the figure.
+%   axisScale: change scale & ticks of axis:
+%       'linear', 'semilogx', 'semilogy', 'loglog', 'default' (default)
+%   XLabel: set label of x axis, with LaTeX. (Default: '')
+%   YLabel: set label of y axis, with LaTeX. (Default: '')
+%   YLabelLeft: set label of left y axis, with LaTeX. (Default: '')
+%   YLabelRight: set label of right y axis, with LaTeX. (Default: '')
+%   tickNum: number of ticks on both axes. (Default: 5)
+%   legends: set legends. (Default: {})
+%   fontSize: size of font of the axes. (Default: 18)
+%   fontName: font name of the labels. (Default: 'Times New Roman')
+
 
 p = inputParser;
 % Required
 addRequired(p, 'fig', @(x) isa(x, 'matlab.ui.Figure'));
-addRequired(p, 'ax', @(x) isOrContain(x, 'matlab.graphics.axis.Axes'));
+% addRequired(p, 'ax', @(x) isOrContain(x, 'matlab.graphics.axis.Axes'));
 addRequired(p, 'fileName', @ischar);
 % Parameters
-addParameter(p, 'size', 'image', @(x)...
+addParameter(p, 'orientation', 'image', @(x)...
 	~isempty(regexpi(x, {'Landscape', 'Portrait', 'Image'})));
+addParameter(p, 'imageSize', [3, 2], @(x) all(size(x) == [1, 2]) && all(x > 0));
 addParameter(p, 'axisLocation', 'default',...
 	@(x) memberOrContain(x, {'default', 'origin'}));
 addParameter(p, 'XAxisLocation', 'bottom',...
@@ -27,22 +50,24 @@ addParameter(p, 'YAxisLocation', 'left',...
 	@(x) memberOrContain(x, {'left', 'origin', 'right'}));
 addParameter(p, 'axisScale', 'default',...
 	@(x) memberOrContain(x, {'linear', 'semilogx', 'semilogy', 'loglog', 'default'}));
-addParameter(p, 'XLabel', '', @(x) isOrContain(x, 'char'));
-addParameter(p, 'YLabel', '', @(x) isOrContain(x, 'char'));
+addParameter(p, 'XLabel', '', @(x) isOrContain(x, 'char') || isOrContain(x, 'cell'));
+addParameter(p, 'YLabel', '', @(x) isOrContain(x, 'char') || isOrContain(x, 'cell'));
 addParameter(p, 'XLim', [],	@(x) isOrContain(x, 'double'));
 addParameter(p, 'YLim', [], @(x) isOrContain(x, 'double'));
-addParameter(p, 'YLabelLeft', '', @(x) isOrContain(x, 'char'));
-addParameter(p, 'YLabelRight', '', @(x) isOrContain(x, 'char'));
+addParameter(p, 'YLabelLeft', '', @(x) isOrContain(x, 'char') || isOrContain(x, 'cell'));
+addParameter(p, 'YLabelRight', '', @(x) isOrContain(x, 'char') || isOrContain(x, 'cell'));
 addParameter(p, 'tickNum', 5, @isinteger);
+addParameter(p, 'legends', {},  @(x) isOrContain(x, 'char') || isOrContain(x, 'cell'));
 addParameter(p, 'fontSize', 18, @isfloat);
 addParameter(p, 'fontName', 'Times New Roman', @ischar);
 
 % Parse input
-parse(p, fig, ax, fileName, varargin{:});
+parse(p, fig, fileName, varargin{:});
 fig = p.Results.fig;
-ax = p.Results.ax;
+% ax = p.Results.ax;
 fileName = p.Results.fileName;
-size = p.Results.size;
+orientation = p.Results.orientation;
+imageSize = p.Results.imageSize;
 axisLocation = p.Results.axisLocation;
 XAxisLocation = p.Results.XAxisLocation;
 YAxisLocation = p.Results.YAxisLocation;
@@ -54,23 +79,22 @@ YLim = p.Results.YLim;
 YLabelLeft = p.Results.YLabelLeft;
 YLabelRight = p.Results.YLabelRight;
 tickNum = p.Results.tickNum;
+legends = p.Results.legends;
 fontSize = p.Results.fontSize;
 fontName = p.Results.fontName;
 
 % Convert to cells
+ax = findall(fig,'type','axes');
 axisNum = numel(ax);
-if ~isa(ax, 'cell')
-	buffer = ax;
-	ax = cell(axisNum, 1);
-	ax{:} = deal(buffer);
-end
+ax = arrayfun(@(ax) ax, ax, 'uni', 0);
+
 axisProperties = {...
 	'axisLocation', 'XAxisLocation', 'YAxisLocation',...
 	'axisScale',...
 	'XLabel', 'YLabel',...
 	'YLabelLeft', 'YLabelRight'...
 };
-for itemIdx = 1:numel(axisProperties)
+for itemIdx = 1: numel(axisProperties)
 	item = axisProperties{itemIdx};
 	itemValue = eval(item);
 	if ~isa(itemValue, 'cell') % Single element
@@ -125,9 +149,17 @@ if ~useDefault('YLabelLeft', p) || ~useDefault('YLabelRight', p)
 	cellfun(@(ax, YLabelLeft, YLabelRight)...
 	setLnRYLabels(ax, YLabelLeft, YLabelRight), ax, YLabelLeft, YLabelRight)
 elseif ~useDefault('YLabel', p)
-	cellfun(@(ax, YLabel) set(ax.YLabel,'String', YLabel), ax, YLabel);
+	cellfun(...
+        @(ax, YLabel) set(...
+            ax.YLabel, 'String', YLabel, 'Interpreter', 'latex'...
+        ),...
+        ax, YLabel...
+    );
 end
-cellfun(@(ax, XLabel) set(ax.XLabel, 'String', XLabel), ax, XLabel);
+cellfun(...
+    @(ax, XLabel) set(ax.XLabel, 'String', XLabel, 'Interpreter', 'latex'),...
+    ax, XLabel...
+);
 
 % Axis Limits
 if ~useDefault('XLim', p)
@@ -153,22 +185,49 @@ if ~useDefault('axisScale', p)
 	);
 
 	% Set ticks & font size
-	cellfun(@(ax, xTick, yTick, xScale, yScale) set(ax,...
-		'XTick', xTick, 'YTick', yTick,...
-		'XScale', xScale, 'YScale', yScale),...
-		ax, xTick, yTick, xScale, yScale);
+	cellfun(...
+        @(ax, xTick, yTick, xScale, yScale) set(...
+            ax,...
+            'XTick', xTick, 'YTick', yTick,...
+		    'XScale', xScale, 'YScale', yScale...
+        ),...
+		ax, xTick, yTick, xScale, yScale...
+    );
 end
 
-% Font type and size
+% Legend
+if ~useDefault('legends', p)
+    if isa(legends{1}, 'char') % Single legend
+        for ax_idx = 1: axisNum
+            axes(ax{ax_idx});
+            legend(legends, 'Location', 'Best', 'Interpreter', 'Latex');
+        end
+    elseif isa(legends{1}, 'cell') && numel(legends) == axisNum
+        for ax_idx = 1: axisNum
+            axes(ax{ax_idx});
+            legend(legends{ax_idx}, 'Location', 'Best', 'Interpreter', 'Latex');
+        end
+    else
+        error('Legends should have the same number as axes.');
+    end
+end
+
+% Font type and size for axes
 cellfun(@(ax) set(ax, 'FontSize', fontSize, 'FontName', fontName), ax);
 
+% Font for all texts
+text = findall(fig, 'Type', 'text');
+arrayfun(@(text) set(text, 'FontSize', fontSize, 'FontName', fontName), text);
+
 % Paper Size
-switch size
+switch orientation
 	case 'image'
-		set(fig, 'PaperUnits', 'Inches',...
-			'PaperSize', [3, 2])
+		set(fig,...
+            'PaperUnits', 'Inches',...
+			'PaperSize', imageSize...
+        );
 	case {'Landscape', 'Portrait'}
-		set(fig, 'PaperOrientation', size);
+		set(fig, 'PaperOrientation', orientation);
 end
 
 print(fig, fileName, '-depsc');
@@ -183,9 +242,9 @@ function [] = setLnRYLabels( ax, labelLeft, labelRight )
 
 	subplot(ax);
 	yyaxis left;
-	ax.YLabel.String = labelLeft;
+    set(ax.YLabel, 'String', labelLeft, 'Interpreter', 'latex');
 	yyaxis right;
-	ax.YLabel.String = labelRight;
+	set(ax.YLabel, 'String', labelRight, 'Interpreter', 'latex');
 
 end  % setLnRYLabels
 
